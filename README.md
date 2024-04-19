@@ -1,10 +1,12 @@
 # SUDEM
 
-Shielding Under a Digital Elevation Model (SUDEM) is a Matlab script that calculates the attenuation of cosmogenic radiation under an irregular surface.
+Shielding Under a Digital Elevation Model (SUDEM) is a Matlab script that calculates the attenuation of cosmogenic radiation under an irregular surface (self-shielding).
 
 The script calculates Shielding Factors for the different production mechanisms (spallation and muons) in samples located under the ground from a Digital Elvation Model and the location of the samples.
 
-SUDEM is more accurate than considering a flat surface above the samples. The methodology is inspired by the method described in [Balco (2014)](https://doi.org/10.1016/j.quageo.2013.12.002). Although SUDEM is faster and easier to use, it is less precise when accounting for cosmic rays trajectories crossing the surface 3 or more times. Therefore, if samples are located under 'holes' (e.g. bedrock surface under a large erratic) Balco's method will produce more accurate results.
+THe mehod is based in the interpolation of the given DEM to generate log-distributed radial DEMs. Cosmic rays through the sample and each node of the radial DEM are simulated.
+
+Shielding factors calculated using SUDEM are more accurate than considering a flat surface above the samples. The methodology is inspired by the code described in [Balco (2014)](https://doi.org/10.1016/j.quageo.2013.12.002). Although SUDEM is faster and easier to use, it is less precise when accounting for cosmic rays trajectories crossing the surface 3 or more times. Therefore, if samples are located under 'holes' (e.g. bedrock surface under a large erratic) Balco's method will produce more accurate results.
 
 [Angel Rodes](http://www.angelrodes.com), 2024.
 
@@ -34,3 +36,45 @@ A second file containing the sample locations is also required in the SUDEM fold
     - Otherwise, a dialog will ask the user to choose if the Z values are realtive or absolute.
 
 **Note that X, Y, and Z values must also be expressed in metres.** For depth profiles, remember to convert to negative metres!
+
+## Other parameters
+
+At the top of the Matlab script, the following parameters can be changed:
+
+- Number of points for radial DEMs: Resolution of the interpolated digital elevation models. More resolution, more precission, longer runs.
+- ```min_distance```: Minimun horizontal distance for near vertical cosmic rays.
+- ```randomized_models```: % Number of randomized model used to estimate uncertainties.
+- Attenuationg lengths for cosgenic productions: 160, 850, 5000, and 500 g/cm2, according to the aproximations described in [Rodés, Á. (2021)](https://doi.org/10.3390/geosciences11090362).
+- Density of the rock.
+- ```display_3D_dem```: Choose if showing (```1```) or not (```0```) the DEM in a 3-D plot. ```0``` will save computing time.
+
+## Otputs
+
+The scipt will produce a figure for each sample. Each figure show the different surface transects radial from the sample location. As the distances are dirtibuted logarithmically, two plots are produced: one for local morphology (angles<20º), and one for the entire radial DEM.
+
+![image](https://github.com/angelrodes/SUDEM/assets/53089531/5ec2563f-830a-4fdf-8bdc-fd333097d1e7)
+
+A table showing all the shielding factors and uncertainties will be shown in the Command Window.
+
+![image](https://github.com/angelrodes/SUDEM/assets/53089531/7f35e3d2-f131-4eda-8aa6-06d6c2e73c54)
+
+## Under the hood
+
+![SUDEM_story](https://github.com/angelrodes/SUDEM/assets/53089531/ba4bde1c-4cd8-4a9d-8a1a-99a992f81004)
+
+### Radial DEM
+
+A radial grid centered in the samples is produce. The nodes of the grid are ditributed along ```n_azhimuts``` directions and ```n_distances``` distances spaced logartithmically, form a horizontal ```min_distance``` from the sample to the longest distance from the sample with an elevation higher than the sample in the original DEM. THis nodes are then used to simulate cosmic rays arriving to the sample.
+
+### Shielding calcualtions
+
+For each trajectory, the model calculates the distance (d) between the sample and the surface and the zenith angle (φ). The attenuation of the cosmic ray for this trajectory is calculated as e<sup>-d*ρ/Λ</sup>, where ρ is the density of the rock and Λ is the attenuation length of the cosmic radiation.
+
+All the attenuations calculated are weighted by N<sub>ΔΦ</sub> · _sin_<sup>2.3</sup>(φ), where N<sub>ΔΦ</sub> is the number of cosmic ray for each of the 100 zenith angle groups (one every 0.9°), and _sin_<sup>2.3</sup>(φ) is the relative contribution of the cosmic radiation according to [Gosse & Phillips (2001)](https://doi.org/10.1016/S0277-3791(00)00171-2). The final shielding factor is calculated as 1 minus the weighted average attenuation.
+
+In contrast to [Balco (2014)](https://doi.org/10.1016/j.quageo.2013.12.002)'s method, holes that make cosmic rays to cross the surface 3 or more times are not simulated, and their contributions are considered "in average" according to the different distances between the surface and the sample. For a smooth surface, we don't expect many close-to-vertical rays, the ones that contribute more, to cross the surface 3 or more times, so  this approximation provides accurate shielding factors for most applications.
+
+### Uncertainties
+
+In order to estimate the uncertainty of this method, the calculations are repeated using random interpolations of the initial nodes of the radial DEM. The standard deviation of the produced shielding factors is shown as uncertinty.
+ 
