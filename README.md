@@ -41,7 +41,7 @@ A second file containing the sample locations is also required in the SUDEM fold
 
 At the top of the Matlab script, the following parameters can be changed:
 
-- Number of points for radial DEMs: Resolution of the interpolated digital elevation models. 100 azhimuts and 300 distances are considered by default. More resolution, more precission, longer runs.
+- Number of points for radial DEMs: Resolution of the interpolated digital elevation models. 100 azimuths and 300 distances are considered by default. More resolution, more precission, longer runs.
 - ```min_distance```: Minimun horizontal distance for near vertical cosmic rays. 10 cm is considered by default. For very deep samples, consider reducing this number.
 - ```randomized_models```: % Number of randomized model used to estimate uncertainties.
 - Attenuationg lengths for cosgenic productions: 160, 850, 5000, and 500 g/cm2, according to the aproximations described in [Rodés, Á. (2021)](https://doi.org/10.3390/geosciences11090362).
@@ -52,7 +52,8 @@ At the top of the Matlab script, the following parameters can be changed:
 
 The scipt will produce a figure for each sample. Each figure show the different surface transects radial from the sample location. As the distances are dirtibuted logarithmically, two plots are produced: one for local morphology (angles<20º), and one for the entire radial DEM.
 
-![image](https://github.com/angelrodes/SUDEM/assets/53089531/5ec2563f-830a-4fdf-8bdc-fd333097d1e7)
+![image](https://github.com/angelrodes/SUDEM/assets/53089531/13b52b60-11e4-4b87-9718-69ea99a6f7f8)
+*Colour hue of the cross-section correspond to azimuths.*
 
 A table showing all the shielding factors and uncertainties will be shown in the Command Window.
 
@@ -64,7 +65,7 @@ A table showing all the shielding factors and uncertainties will be shown in the
 
 ### Radial DEM
 
-SUDEM genrates radial grids centered in the sample locations. The nodes of the grid are ditributed along ```n_azhimuts``` directions and ```n_distances``` distances spaced logartithmically, form a horizontal ```min_distance``` from the sample to the longest distance from the sample with an elevation higher than the sample in the original DEM. Node elevations are 2-D interpolated from the original DEM. These nodes are then used to simulate cosmic rays arriving to the sample.
+SUDEM genrates radial grids centered in the sample locations. The nodes of the grid are ditributed along ```n_azimuths``` directions and ```n_distances``` distances spaced logartithmically, form a horizontal ```min_distance``` from the sample to the longest distance from the sample with an elevation higher than the sample in the original DEM. Node elevations are 2-D interpolated from the original DEM. These nodes are then used to simulate cosmic rays arriving to the sample.
 
 ### Shielding calcualtions
 
@@ -76,5 +77,5 @@ In contrast to [Balco (2014)](https://doi.org/10.1016/j.quageo.2013.12.002)'s me
 
 ### Uncertainties
 
-In order to estimate the uncertainty of this method, the radial grids are re-calulated with nodes corresponding to random interpolations between the initial nodes of the radial DEM. Thus, azhimuts and distances of randomized grids will not be homogeneously distributied. The first random distance is randomized between 0 and ```min_distance```, so randomized grids have the same number of nodes as the original grid. The standard deviation of the the produced shielding factors is shown as uncertinty.
+In order to estimate the uncertainty of this method, the radial grids are re-calulated with nodes corresponding to random interpolations between the initial nodes of the radial DEM. Thus, azimuths and distances of randomized grids will not be homogeneously distributied. The first random distance is randomized between 0 and ```min_distance```, so randomized grids have the same number of nodes as the original grid. The standard deviation of the the produced shielding factors is shown as uncertinty.
  
