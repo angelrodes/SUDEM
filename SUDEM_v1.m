@@ -16,7 +16,7 @@ n_azhimuts=100; % higher number will produce more detailed radial DEMs
 n_distances=300; % higher number will produce more detailed radial DEMs
 min_distance=0.01; % min distance in metres
 
-randomized_models=2; % Number of randomized model used to estimate uncertainties
+randomized_models=1; % Number of randomized model used to estimate uncertainties
 
 % Attenuationg lengths for cosgenic productions
 L=[160 850 5000 500]; % g/cm2. See Rodés, Á. (2021) https://doi.org/10.3390/geosciences11090362
@@ -71,9 +71,9 @@ if relative_sample_elevations==1 % if relative elevations
     % convert to absolute elevations
     z_samples=z_samples+griddata(x,y,z,x_samples,y_samples);
 end
-
-if sum(isnan(griddata(x,y,z,x_samples,y_samples)))>0
-   warning([num2str(sum(isnan(griddata(x,y,z,x_samples,y_samples)))) ' samples out of DEM limits!']) 
+kk
+if sum(x_samples<min(x) | x_samples>max(x) | y_samples<min(y) | y_samples>max(y))>0
+   warning([num2str(sum(x_samples<min(x) | x_samples>max(x) | y_samples<min(y) | y_samples>may(y))) ' samples out of DEM limits!']) 
 end
 
 %% Plot original DEM and samples
@@ -81,7 +81,7 @@ if display_3D_dem==1
     h=figure('units','normalized','outerposition',[0 0 0.5 0.5],'Name','DEM & samples','NumberTitle','off');
     
     hold on
-    plot3(x,y,z,'.k')
+    plot3(x,y,z,'.b')
     plot3(x_samples,y_samples,z_samples,'pr','MarkerFaceColor','r')
     for si=1:numel(x_samples)
         plot3(x_samples(si)*[1,1],y_samples(si)*[1,1],[z_samples(si) max(z(:))+10],'-r')
@@ -107,7 +107,7 @@ dSF_restults=zeros(numel(x_samples),numel(L)); % init. table of uncertainties
 randomized_models=max(0,round(randomized_models)); % correct nonsense values of randomized_models
 
 if randomized_models<2
-    if andomized_models>0
+    if randomized_models>0
         warning('Less than 2 randomized_models. Uncertainties will not be estimated properly.')
     else
         warning('No randomized_models. Uncertainties will not be estimated.')
@@ -171,11 +171,64 @@ for sampleindex=1:numel(x_samples)
             attenuation_factors=(1-exp(-depths*100*rho/L(L_i)));
             shielding=1-sum(attenuation_factors(angles>0).*wehights(angles>0))/sum(wehights(angles>0));
             SF_i(run_index,L_i)=shielding;
+            
+            if run_index==1 && L_i==1 % plot only the first model, and after calculating the first SF
+                % Plot distances vs. elevations
+                h=figure('units','normalized',...
+                    'outerposition',[0+0.4*sampleindex/numel(x_samples) 0.5-0.4*sampleindex/numel(x_samples) 0.5 0.5],...
+                    'Name',['Sample ' num2str(sampleindex)],'NumberTitle','off');
+                subplot(1,2,1)
+                min_angle=20;
+                hold on
+                for az_i=unique(az(:))'
+                    xplot=dist(az==az_i);
+                    zplot=zq(az==az_i);
+                    hue_value = (1 + cosd(mod(rad2deg(az_i), 360))) / 2; % Map azimuths to hue values 
+                    color_az = hsv2rgb([hue_value, ones(size(hue_value)), ones(size(hue_value))]);
+                    plot(xplot,zplot,'-','LineWidth',1,'Color',color_az)
+                end
+                plot(0,z_sample,'pk','MarkerFaceColor','w','MarkerSize',12,'LineWidth',2)
+                xlim([0 max(dist(angles>min_angle/360*2*pi))])
+                z_range=max(zq(angles>min_angle/360*2*pi))-z_sample;
+                ylim([z_sample-z_range*0.1 max(zq(angles>min_angle/360*2*pi))+z_range*0.2])
+                xlabel('Distance (m)')
+                ylabel('Elevation (m)')
+                title(['Sample #' num2str(sampleindex)])
+                grid on
+                box on
+                
+                subplot(1,2,2)
+                min_angle=0;
+                hold on
+                for az_i=unique(az(:))'
+                    xplot=dist(az==az_i);
+                    zplot=zq(az==az_i);
+                    hue_value = (1 + cosd(mod(rad2deg(az_i), 360))) / 2; % Map azimuths to hue values 
+                    color_az = hsv2rgb([hue_value, ones(size(hue_value)), ones(size(hue_value))]);
+                    plot(xplot,zplot,'-','LineWidth',1,'Color',color_az)
+                end
+                plot(0,z_sample,'pk','MarkerFaceColor','w','MarkerSize',12,'LineWidth',2)
+                xlim([0 max(dist(angles>min_angle/360*2*pi))])
+                z_range=max(zq(angles>min_angle/360*2*pi))-z_sample;
+                ylim([z_sample-z_range*0.1 max(zq(angles>min_angle/360*2*pi))+z_range*0.2])
+                xlabel('Distance (m)')
+                ylabel('Elevation (m)')
+                title(['SF_{(' num2str(L(L_i)) ' g/cm^{2})}=' num2str(shielding*100,3) '%'])
+                grid on
+                box on
+                
+                drawnow
+                
+            end
         end
     end
     
     SF=SF_i(1,:); % Shielding Factors from not randomized model
-    dSF=std(SF_i,1); % Uncetainty based on randomized models
+    if size(SF_i,1)>1
+        dSF=std(SF_i,1); % Uncetainty based on randomized models
+    else
+       dSF=0*SF; % no uncertainty in case of one model only
+    end
     
 
     % Display shielding factors in a table
@@ -187,49 +240,7 @@ for sampleindex=1:numel(x_samples)
     SF_restults(sampleindex,:)=SF;
     dSF_restults(sampleindex,:)=dSF;
     
-    % Plot distances vs. elevations
-    h=figure('units','normalized',...
-        'outerposition',[0+0.4*sampleindex/numel(x_samples) 0.5-0.4*sampleindex/numel(x_samples) 0.5 0.5],...
-        'Name',['Sample ' num2str(sampleindex)],'NumberTitle','off');
-    subplot(1,2,1)
-    min_angle=20;
-    hold on
-    for az_i=unique(az(:))'
-        xplot=dist(az==az_i);               
-        zplot=zq(az==az_i);
-        plot(xplot,zplot,'-k','LineWidth',1)
-    end
-    plot(0,z_sample,'*r')
-    %  text(0,z_sample,[' \leftarrow Sample ' num2str(sampleindex)],'Color','r')
-    xlim([0 max(dist(angles>min_angle/360*2*pi))])
-    z_range=max(zq(angles>min_angle/360*2*pi))-z_sample;
-    ylim([z_sample-z_range*0.1 max(zq(angles>min_angle/360*2*pi))+z_range*0.2])
-    xlabel('Distance (m)')
-    ylabel('Elevation (m)')
-    title(['Sample ' num2str(sampleindex)])
-    grid on
-    box on
     
-    subplot(1,2,2)
-    min_angle=0;
-    hold on
-    for az_i=unique(az(:))'
-        xplot=dist(az==az_i);               
-        zplot=zq(az==az_i);
-        plot(xplot,zplot,'-k','LineWidth',1)
-    end
-    plot(0,z_sample,'*r')
-    text(0,z_sample,[' \leftarrow Sample ' num2str(sampleindex)],'Color','r')
-    xlim([0 max(dist(angles>min_angle/360*2*pi))])
-    z_range=max(zq(angles>min_angle/360*2*pi))-z_sample;
-    ylim([z_sample-z_range*0.1 max(zq(angles>min_angle/360*2*pi))+z_range*0.2])
-    xlabel('Distance (m)')
-    ylabel('Elevation (m)')
-    title(['SF_{Spall.}=' num2str(SF(L==min(L))*100,3) '%'])
-    grid on
-    box on
-    
-    drawnow
 end
 
 %% Display Summary
