@@ -1,5 +1,7 @@
 # SUDEM
 
+![Screenshot 2024-04-27 at 22-45-43 SUDEM_logo - Google Drawings](https://github.com/angelrodes/SUDEM/assets/53089531/d75a5a6b-e496-4fb0-88d4-9495d550027a)
+
 Shielding Under a Digital Elevation Model (SUDEM) is a Matlab script that calculates the attenuation of cosmogenic radiation under an irregular surface (self-shielding).
 
 The script calculates Shielding Factors for the different production mechanisms (spallation and muons) in samples located under the ground from a Digital Elvation Model and the location of the samples.
