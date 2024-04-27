@@ -50,7 +50,7 @@ At the top of the Matlab script, the following parameters can be changed:
 - Density of the rock.
 - ```display_3D_dem```: Choose if showing (```1```) or not (```0```) the DEM in a 3-D plot. ```0``` will save computing time.
 
-## Otputs
+## Outputs
 
 The scipt will produce a figure for each sample. Each figure show the different surface transects radial from the sample location. As the distances are dirtibuted logarithmically, two plots are produced: one for local morphology (angles<20º), and one for the entire radial DEM.
 
